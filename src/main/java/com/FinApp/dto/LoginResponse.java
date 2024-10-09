@@ -1,4 +1,4 @@
-package com.FinApp.payload;
+package com.FinApp.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

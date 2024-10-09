@@ -1,7 +1,9 @@
 package com.FinApp.util;
 
+import com.FinApp.model.User;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -12,27 +14,29 @@ import java.util.Set;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
+    @Value("${api.security.jwt.secret}")
     private String jwtSecret;
 
-    @Value("${jwt.expirationMs}")
+    @Value("${api.security.jwt.expiration.in.ms}")
     private int jwtExpirationMs;
 
     private Algorithm getAlgorithm(){
         return Algorithm.HMAC512(jwtSecret);
     }
 
-    // Generate JWT token
-    public String generateToken(String username, Set<String> roles){
-        return JWT.create()
-                .withSubject(username)
-                .withClaim("roles", String.join(",", roles))
-                .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .sign(getAlgorithm());
+    public String generateToken(User user, Set<String> roles){
+        try {
+            return JWT.create()
+                    .withIssuer("login-auth-api")
+                    .withSubject(user.getEmail())
+                    .withClaim("roles", String.join(",", roles))
+                    .withExpiresAt(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                    .sign(getAlgorithm());
+        } catch (JWTCreationException  exception) {
+            throw new RuntimeException("Error while authenticating");
+        }
     }
 
-    // Get username from JWT token
     public String getUsernameFromToken(String token){
         return JWT.require(getAlgorithm())
                 .build()
@@ -40,7 +44,6 @@ public class JwtUtil {
                 .getSubject();
     }
 
-    // Get roles from JWT token
     public Set<String> getRolesFromToken(String token){
         String roles = JWT.require(getAlgorithm())
                 .build()
@@ -50,14 +53,15 @@ public class JwtUtil {
         return Set.of(roles.split(","));
     }
 
-    // Validate JWT token
-    public boolean validateToken(String token){
+    public String validateToken(String token){
         try {
-            JWT.require(getAlgorithm()).build().verify(token);
-            return true;
+            return JWT.require(getAlgorithm())
+                    .withIssuer("login-auth-api")
+                    .build()
+                    .verify(token)
+                    .getSubject();
         } catch (JWTVerificationException ex){
-            // Log exception if necessary
-            return false;
+            return null;
         }
     }
 }
