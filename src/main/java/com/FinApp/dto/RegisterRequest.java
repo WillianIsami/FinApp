@@ -11,7 +11,10 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class LoginRequest {
+public class RegisterRequest {
+    private String username;
     private String email;
+    private List<String> roles;
     private String password;
 }
+

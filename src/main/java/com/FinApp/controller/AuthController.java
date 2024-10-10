@@ -1,6 +1,7 @@
 package com.FinApp.controller;
 
 import com.FinApp.dto.JwtResponse;
+import com.FinApp.dto.RegisterRequest;
 import com.FinApp.model.Role;
 import com.FinApp.model.User;
 import com.FinApp.dto.LoginRequest;
@@ -8,6 +9,7 @@ import com.FinApp.repository.RoleRepository;
 import com.FinApp.repository.UserRepository;
 import com.FinApp.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,9 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -45,15 +45,16 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername(),
-                        loginRequest.getPassword()
-                )
-        );
-        User user = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
+//        Authentication authentication = authenticationManager.authenticate(
+//                new UsernamePasswordAuthenticationToken(
+//                        loginRequest.getEmail(),
+//                        loginRequest.getPassword()
+//                )
+//        );
+        User user = userRepository.findByEmail(loginRequest.getEmail()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email not found");
+        }
         if(passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             Set<String> roles = user.getRoles().stream()
                     .map(Role::getName)
@@ -61,13 +62,13 @@ public class AuthController {
             String token = jwtUtil.generateToken(user, roles);
             return ResponseEntity.ok(new JwtResponse(token));
         }
-        return ResponseEntity.badRequest().build();
+        return ResponseEntity.badRequest().body("Invalid email or password");
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody LoginRequest registerRequest){
-        if(userRepository.findByUsername(registerRequest.getUsername()).isPresent()){
-            return ResponseEntity.badRequest().body("Username is already taken");
+    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest registerRequest){
+        if(userRepository.findByEmail(registerRequest.getEmail()).isPresent()){
+            return ResponseEntity.badRequest().body("Email is already taken");
         }
         Set<Role> roles = new HashSet<>();
         for (String roleName : registerRequest.getRoles()) {
