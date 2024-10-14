@@ -1,6 +1,5 @@
 package com.FinApp.service;
 
-import com.FinApp.model.User;
 import com.FinApp.repository.UserRepository;
 import com.FinApp.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +16,6 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email).orElseThrow( () -> new UsernameNotFoundException("User not found with email: " + email));
-        return new CustomUserDetails(user);
+        return userRepository.findByEmail(email);
     }
 }

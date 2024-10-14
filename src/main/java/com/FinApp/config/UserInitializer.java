@@ -10,7 +10,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,33 +35,32 @@ public class UserInitializer implements CommandLineRunner {
             admin.setEmail("admin@gmail.com");
             admin.setPassword(passwordEncoder.encode("adminpassword"));
 
-            Role bossRole = roleRepository.findByName("ROLE_BOSS")
-                    .orElseThrow(() -> new RuntimeException("ROLE_BOSS not found"));
-            Role managerRoller = roleRepository.findByName("ROLE_MANAGER")
-                    .orElseThrow(() -> new RuntimeException("ROLE_BOSS not found"));
-            Role sellerRole = roleRepository.findByName("ROLE_SELLER")
-                    .orElseThrow(() -> new RuntimeException("ROLE_BOSS not found"));
+            Role bossRole = roleRepository.findByName("BOSS")
+                    .orElseThrow(() -> new RuntimeException("BOSS not found"));
+            Role managerRoller = roleRepository.findByName("MANAGER")
+                    .orElseThrow(() -> new RuntimeException("MANAGER not found"));
+            Role sellerRole = roleRepository.findByName("SELLER")
+                    .orElseThrow(() -> new RuntimeException("SELLER not found"));
 
             Set<Role> roles = new HashSet<>(List.of(bossRole, managerRoller, sellerRole));
-            admin.setRoles(roles);
+            admin.setRole(roles);
 
             userRepository.save(admin);
             System.out.println("Created admin user");
         }
 
-        // Similarly, create other users like managers or sellers
         if (!userRepository.findByUsername("manager1").isPresent()) {
             User manager = new User();
             manager.setUsername("manager1");
             manager.setEmail("manager1@gmail.com");
             manager.setPassword(passwordEncoder.encode("managerpassword"));
 
-            Role managerRole = roleRepository.findByName("ROLE_MANAGER")
-                    .orElseThrow(() -> new RuntimeException("ROLE_MANAGER not found"));
+            Role managerRole = roleRepository.findByName("MANAGER")
+                    .orElseThrow(() -> new RuntimeException("MANAGER not found"));
 
             Set<Role> roles = new HashSet<>();
             roles.add(managerRole);
-            manager.setRoles(roles);
+            manager.setRole(roles);
 
             userRepository.save(manager);
             System.out.println("Created manager1 user");
@@ -74,12 +72,12 @@ public class UserInitializer implements CommandLineRunner {
             seller.setEmail("seller1@gmail.com");
             seller.setPassword(passwordEncoder.encode("sellerpassword"));
 
-            Role sellerRole = roleRepository.findByName("ROLE_SELLER")
-                    .orElseThrow(() -> new RuntimeException("ROLE_SELLER not found"));
+            Role sellerRole = roleRepository.findByName("SELLER")
+                    .orElseThrow(() -> new RuntimeException("SELLER not found"));
 
             Set<Role> roles = new HashSet<>();
             roles.add(sellerRole);
-            seller.setRoles(roles);
+            seller.setRole(roles);
 
             userRepository.save(seller);
             System.out.println("Created seller1 user");

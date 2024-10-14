@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
-import java.util.Set;
 
 @Component
 public class JwtUtil {
@@ -24,44 +23,27 @@ public class JwtUtil {
         return Algorithm.HMAC512(jwtSecret);
     }
 
-    public String generateToken(User user, Set<String> roles){
+    public String generateToken(User user){
         try {
             return JWT.create()
-                    .withIssuer("login-auth-api")
+                    .withIssuer("auth-api")
                     .withSubject(user.getEmail())
-                    .withClaim("roles", String.join(",", roles))
                     .withExpiresAt(new Date(System.currentTimeMillis() + jwtExpirationMs))
                     .sign(getAlgorithm());
         } catch (JWTCreationException  exception) {
-            throw new RuntimeException("Error while authenticating");
+            throw new RuntimeException("Error while authenticating", exception);
         }
     }
 
-    public String getUsernameFromToken(String token){
-        return JWT.require(getAlgorithm())
-                .build()
-                .verify(token)
-                .getSubject();
-    }
-
-    public Set<String> getRolesFromToken(String token){
-        String roles = JWT.require(getAlgorithm())
-                .build()
-                .verify(token)
-                .getClaim("roles")
-                .asString();
-        return Set.of(roles.split(","));
-    }
-
-    public String validateToken(String token){
+    public String getEmailFromToken(String token){
         try {
             return JWT.require(getAlgorithm())
-                    .withIssuer("login-auth-api")
+                    .withIssuer("auth-api")
                     .build()
                     .verify(token)
                     .getSubject();
-        } catch (JWTVerificationException ex){
-            return null;
+        } catch (JWTVerificationException exception) {
+            return "";
         }
     }
 }
